@@ -1,0 +1,27 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+src-tauri/target/
+
+# Generated icons (can be regenerated with: npx tauri icon app-icon.png)
+src-tauri/gen/
+
+# Env files (contains API keys)
+.env
+.env.local
+.env.*.local
+
+# Tauri build artifacts
+src-tauri/WixTools/
+
+# IDE
+.vscode/
+.idea/
+
+# macOS
+.DS_Store
+
+# TypeScript build info
+*.tsbuildinfo

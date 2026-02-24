@@ -1,0 +1,129 @@
+@import "@fontsource/nunito/400.css";
+@import "@fontsource/nunito/500.css";
+@import "@fontsource/nunito/600.css";
+@import "@fontsource/nunito/700.css";
+@import "@fontsource/nunito/800.css";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --parchment: #fef9ef;
+    --paper: #ffffff;
+    --paper-border: #c8b89a;
+    --paper-shadow: #b09a7a;
+    --mario-red: #e8635a;
+    --sky-blue: #4a90d9;
+    --leaf-green: #5cb85c;
+    --pm-yellow: #f5d76e;
+    --pm-dark: #3d2b1f;
+    --pm-gray: #8a7a6a;
+    --sidebar-width: 68px;
+    --channel-width: 232px;
+    --member-width: 240px;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  html,
+  body,
+  #root {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    font-family: "Nunito", sans-serif;
+    background-color: var(--parchment);
+    color: var(--pm-dark);
+    overflow: hidden;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--paper-border);
+    border-radius: 3px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--paper-shadow);
+  }
+}
+
+@layer components {
+  .paper-card {
+    @apply bg-paper border-3 border-paper-border rounded-lg shadow-paper;
+  }
+
+  .paper-btn {
+    @apply bg-paper border-3 border-paper-border rounded-lg px-4 py-2 font-bold
+           shadow-paper-sm hover:shadow-none hover:translate-x-0.5 hover:translate-y-0.5
+           active:shadow-none active:translate-x-1 active:translate-y-1
+           transition-all duration-75 cursor-pointer;
+  }
+
+  .paper-btn-primary {
+    @apply paper-btn bg-mario-red text-white border-[#c04040];
+  }
+
+  .paper-btn-secondary {
+    @apply paper-btn bg-sky-blue text-white border-[#2c6ea8];
+  }
+
+  .paper-input {
+    @apply bg-paper border-3 border-paper-border rounded-lg px-3 py-2
+           focus:outline-none focus:border-sky-blue shadow-paper-inset
+           transition-colors font-sans;
+  }
+
+  .space-icon-btn {
+    @apply w-12 h-12 rounded-2xl border-3 border-paper-border shadow-paper-sm
+           flex items-center justify-center cursor-pointer
+           hover:rounded-xl transition-all duration-150
+           hover:bg-mario-red hover:border-[#c04040] hover:text-white;
+  }
+
+  .space-icon-btn.active {
+    @apply rounded-xl bg-mario-red border-[#c04040] text-white;
+  }
+
+  .channel-item {
+    @apply flex items-center gap-2 px-2 py-1.5 rounded-lg cursor-pointer
+           text-pm-gray hover:text-pm-dark hover:bg-parchment
+           transition-colors text-sm font-medium;
+  }
+
+  .channel-item.active {
+    @apply bg-parchment text-pm-dark font-bold;
+  }
+
+  .presence-dot {
+    @apply w-3 h-3 rounded-full border-2 border-paper absolute bottom-0 right-0;
+  }
+
+  .presence-dot.online {
+    @apply bg-leaf-green;
+  }
+
+  .presence-dot.offline {
+    @apply bg-pm-gray;
+  }
+
+  .presence-dot.away {
+    @apply bg-pm-yellow;
+  }
+}
