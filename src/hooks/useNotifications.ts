@@ -4,8 +4,6 @@ import { useStore } from "../store";
 import { MatrixClient, RoomEvent, MatrixEvent } from "matrix-js-sdk";
 
 export function useNotifications(client: MatrixClient | null) {
-  const activeRoomId = useStore((s) => s.activeRoomId);
-
   useEffect(() => {
     initNotifications().catch(console.error);
   }, []);
@@ -13,16 +11,22 @@ export function useNotifications(client: MatrixClient | null) {
   useEffect(() => {
     if (!client) return;
 
-    const onTimeline = (event: MatrixEvent, room: { roomId: string; name?: string } | undefined, toStartOfTimeline: boolean) => {
+    const onTimeline = (
+      event: MatrixEvent,
+      room: { roomId: string; name?: string } | undefined,
+      toStartOfTimeline: boolean
+    ) => {
       if (toStartOfTimeline) return;
       if (!room) return;
-      if (room.roomId === activeRoomId) return;
       if (event.getType() !== "m.room.message") return;
+
+      // Read activeRoomId without subscribing — same pattern as useMatrixSync
+      const { activeRoomId } = useStore.getState();
+      if (room.roomId === activeRoomId) return;
 
       const sender = event.getSender() ?? "Someone";
       const body = event.getContent()?.body ?? "";
-      const roomName = (room as { name?: string }).name ?? room.roomId;
-
+      const roomName = room.name ?? room.roomId;
       fireNotification(`${sender} in ${roomName}`, body.slice(0, 100));
     };
 
@@ -30,5 +34,5 @@ export function useNotifications(client: MatrixClient | null) {
     return () => {
       client.removeListener(RoomEvent.Timeline as unknown as Parameters<typeof client.removeListener>[0], onTimeline as Parameters<typeof client.removeListener>[1]);
     };
-  }, [client, activeRoomId]);
+  }, [client]); // no activeRoomId dep — AppShell no longer re-renders on room clicks
 }
