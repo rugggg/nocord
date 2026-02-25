@@ -6,6 +6,8 @@ import { MemberList } from "../members/MemberList";
 import { SettingsScreen } from "../settings/SettingsScreen";
 import { useMatrixSync } from "../../hooks/useMatrixSync";
 import { useNotifications } from "../../hooks/useNotifications";
+import { useVerification } from "../../hooks/useVerification";
+import { VerificationModal } from "../verification/VerificationModal";
 import { ErrorBoundary } from "../ui/ErrorBoundary";
 
 export function AppShell() {
@@ -15,9 +17,11 @@ export function AppShell() {
 
   useMatrixSync(matrixClient);
   useNotifications(matrixClient);
+  const { state: verificationState, actions: verificationActions } = useVerification(matrixClient);
 
   return (
     <div className="flex h-screen overflow-hidden bg-parchment">
+      <VerificationModal state={verificationState} actions={verificationActions} />
       {/* Far-left space sidebar */}
       <SpaceSidebar />
 
