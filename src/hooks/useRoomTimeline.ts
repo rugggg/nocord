@@ -18,8 +18,8 @@ export function useRoomTimeline(client: MatrixClient | null, roomId: string | nu
     const loadHistory = async () => {
       try {
         await client.scrollback(room, 50);
-      } catch {
-        // scrollback may be unavailable; fall through to current timeline
+      } catch (err) {
+        console.warn("[useRoomTimeline] scrollback failed:", err);
       }
 
       const timeline = room.getLiveTimeline().getEvents();

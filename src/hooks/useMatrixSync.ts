@@ -90,7 +90,7 @@ export function useMatrixSync(client: MatrixClient | null) {
     client.on("sync" as Parameters<typeof client.on>[0], onSync as Parameters<typeof client.on>[1]);
     client.on(RoomEvent.Timeline as Parameters<typeof client.on>[0], onTimeline as Parameters<typeof client.on>[1]);
 
-    client.startClient({ initialSyncLimit: 0 });
+    client.startClient({ initialSyncLimit: 30 });
 
     return () => {
       removePresenceListener();

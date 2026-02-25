@@ -21,6 +21,7 @@ export function MessageInput({ roomId }: MessageInputProps) {
   const [showEmoji, setShowEmoji] = useState(false);
   const [showGif, setShowGif] = useState(false);
   const [sending, setSending] = useState(false);
+  const [sendError, setSendError] = useState<string | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const room = matrixClient?.getRoom(roomId);
@@ -31,6 +32,7 @@ export function MessageInput({ roomId }: MessageInputProps) {
     if (!trimmed || !matrixClient || sending) return;
 
     setSending(true);
+    setSendError(null);
     try {
       if (replyToEvent) {
         await sendReply(matrixClient, roomId, trimmed, replyToEvent);
@@ -41,7 +43,9 @@ export function MessageInput({ roomId }: MessageInputProps) {
       setText("");
       textareaRef.current?.focus();
     } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
       console.error("Send failed:", err);
+      setSendError(msg);
     } finally {
       setSending(false);
     }
@@ -85,6 +89,11 @@ export function MessageInput({ roomId }: MessageInputProps) {
 
   return (
     <div className="relative">
+      {sendError && (
+        <div className="px-4 py-1 bg-mario-red/10 border-t border-mario-red/30 text-mario-red text-xs">
+          Failed to send: {sendError}
+        </div>
+      )}
       <ReplyPreview event={replyToEvent} onDismiss={() => setReplyTo(null)} />
 
       <div className="flex items-end gap-2 px-4 py-3 bg-paper border-t-3 border-paper-border">
