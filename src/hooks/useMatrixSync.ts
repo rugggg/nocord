@@ -14,6 +14,7 @@ export function useMatrixSync(client: MatrixClient | null) {
   const setDms = useStore((s) => s.setDms);
   const addMessage = useStore((s) => s.addMessage);
   const addReaction = useStore((s) => s.addReaction);
+  const redactReaction = useStore((s) => s.redactReaction);
   const setPresence = useStore((s) => s.setPresence);
   const incrementUnread = useStore((s) => s.incrementUnread);
 
@@ -63,8 +64,14 @@ export function useMatrixSync(client: MatrixClient | null) {
           | { rel_type?: string; event_id?: string; key?: string }
           | undefined;
         if (relatesTo?.rel_type === "m.annotation" && relatesTo.event_id && relatesTo.key) {
-          addReaction(relatesTo.event_id, relatesTo.key, event.getSender() ?? "");
+          addReaction(relatesTo.event_id, relatesTo.key, event.getSender() ?? "", event.getId() ?? "");
         }
+        return;
+      }
+
+      if (type === "m.room.redaction") {
+        const redactedId = (event.event as { redacts?: string })?.redacts ?? "";
+        if (redactedId) redactReaction(redactedId);
         return;
       }
 

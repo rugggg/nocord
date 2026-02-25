@@ -64,6 +64,14 @@ export async function sendGif(
   );
 }
 
+export async function removeReaction(
+  client: MatrixClient,
+  roomId: string,
+  reactionEventId: string
+): Promise<void> {
+  await client.redactEvent(roomId, reactionEventId);
+}
+
 export async function sendReaction(
   client: MatrixClient,
   roomId: string,

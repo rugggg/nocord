@@ -1,5 +1,5 @@
 import { useStore } from "../../store";
-import { sendReaction } from "../../lib/matrix/messages";
+import { sendReaction, removeReaction } from "../../lib/matrix/messages";
 
 interface ReactionBarProps {
   eventId: string;
@@ -10,15 +10,24 @@ export function ReactionBar({ eventId, roomId }: ReactionBarProps) {
   const matrixClient = useStore((s) => s.matrixClient);
   const userId = useStore((s) => s.userId);
   const reactionsByEvent = useStore((s) => s.reactionsByEvent);
+  const reactionEventLookup = useStore((s) => s.reactionEventLookup);
 
   const reactions = reactionsByEvent[eventId] ?? {};
   const entries = Object.entries(reactions).filter(([, users]) => users.length > 0);
 
   if (entries.length === 0) return null;
 
-  const handleClick = async (emoji: string) => {
-    if (!matrixClient) return;
-    await sendReaction(matrixClient, roomId, eventId, emoji);
+  const handleClick = async (emoji: string, reacted: boolean) => {
+    if (!matrixClient || !userId) return;
+    if (reacted) {
+      // Find the reaction event ID for this user+emoji on this message
+      const reactionEventId = Object.entries(reactionEventLookup).find(
+        ([, v]) => v.targetEventId === eventId && v.emoji === emoji && v.userId === userId
+      )?.[0];
+      if (reactionEventId) await removeReaction(matrixClient, roomId, reactionEventId);
+    } else {
+      await sendReaction(matrixClient, roomId, eventId, emoji);
+    }
   };
 
   return (
@@ -28,7 +37,7 @@ export function ReactionBar({ eventId, roomId }: ReactionBarProps) {
         return (
           <button
             key={emoji}
-            onClick={() => handleClick(emoji)}
+            onClick={() => handleClick(emoji, reacted)}
             className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold border-2 transition-colors
               ${reacted
                 ? "bg-sky-blue/20 border-sky-blue text-sky-blue"
