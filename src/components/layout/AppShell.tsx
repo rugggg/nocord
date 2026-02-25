@@ -6,6 +6,7 @@ import { MemberList } from "../members/MemberList";
 import { SettingsScreen } from "../settings/SettingsScreen";
 import { useMatrixSync } from "../../hooks/useMatrixSync";
 import { useNotifications } from "../../hooks/useNotifications";
+import { ErrorBoundary } from "../ui/ErrorBoundary";
 
 export function AppShell() {
   const matrixClient = useStore((s) => s.matrixClient);
@@ -27,10 +28,10 @@ export function AppShell() {
       {activePanel === "settings" ? (
         <SettingsScreen />
       ) : (
-        <>
+        <ErrorBoundary>
           <ChatArea />
           {showMemberSidebar && <MemberList />}
-        </>
+        </ErrorBoundary>
       )}
     </div>
   );

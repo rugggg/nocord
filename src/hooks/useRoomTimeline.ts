@@ -4,7 +4,6 @@ import { useStore } from "../store";
 
 export function useRoomTimeline(client: MatrixClient | null, roomId: string | null) {
   const prependMessages = useStore((s) => s.prependMessages);
-  const messagesByRoom = useStore((s) => s.messagesByRoom);
 
   useEffect(() => {
     if (!client || !roomId) return;
@@ -12,17 +11,24 @@ export function useRoomTimeline(client: MatrixClient | null, roomId: string | nu
     const room = client.getRoom(roomId);
     if (!room) return;
 
-    // Only load if we haven't loaded this room yet
-    if (messagesByRoom[roomId]?.length) return;
+    // Use getState() to check without subscribing — subscribing here would
+    // cause ChatArea to re-render on every message in any room.
+    if (useStore.getState().messagesByRoom[roomId]?.length) return;
 
-    client.scrollback(room, 50).then(() => {
+    const loadHistory = async () => {
+      try {
+        await client.scrollback(room, 50);
+      } catch {
+        // scrollback may be unavailable; fall through to current timeline
+      }
+
       const timeline = room.getLiveTimeline().getEvents();
-      const msgEvents = timeline.filter(
-        (e) => e.getType() === "m.room.message"
-      );
+      const msgEvents = timeline.filter((e) => e.getType() === "m.room.message");
       if (msgEvents.length > 0) {
         prependMessages(roomId, msgEvents);
       }
-    });
+    };
+
+    loadHistory();
   }, [client, roomId]);
 }

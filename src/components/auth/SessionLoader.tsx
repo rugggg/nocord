@@ -1,14 +1,7 @@
-import { useEffect } from "react";
-import { useStore } from "../../store";
 import { Spinner } from "../ui/Spinner";
 
+// Just a loading screen — App.tsx owns the restoreSession() call.
 export function SessionLoader() {
-  const restoreSession = useStore((s) => s.restoreSession);
-
-  useEffect(() => {
-    restoreSession().catch(console.error);
-  }, []);
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-parchment">
       <div className="flex flex-col items-center gap-4">
