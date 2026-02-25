@@ -9,8 +9,13 @@ interface MessageListProps {
   onReply: (event: MatrixEvent) => void;
 }
 
+// Stable fallback so useSyncExternalStore's getSnapshot always returns the
+// same reference when there are no messages — a new `[]` on every call would
+// fail Object.is and cause React to loop until "Maximum update depth exceeded".
+const EMPTY_MESSAGES: MatrixEvent[] = [];
+
 export function MessageList({ roomId, onReply }: MessageListProps) {
-  const messages = useStore((s) => s.messagesByRoom[roomId] ?? []);
+  const messages = useStore((s) => s.messagesByRoom[roomId] ?? EMPTY_MESSAGES);
   const parentRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const prevLengthRef = useRef(0);
