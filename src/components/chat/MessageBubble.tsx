@@ -16,6 +16,14 @@ function formatTime(ts: number): string {
 }
 
 function renderBody(event: MatrixEvent, client: MatrixClient | null): JSX.Element {
+  if (event.getType() === "m.room.encrypted") {
+    return (
+      <span className="italic text-pm-gray text-sm">
+        🔒 Encrypted message (E2EE not yet supported)
+      </span>
+    );
+  }
+
   const content = event.getContent();
   const msgtype = content?.msgtype as string | undefined;
   const formattedBody = content?.formatted_body as string | undefined;

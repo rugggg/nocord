@@ -18,7 +18,8 @@ export function useNotifications(client: MatrixClient | null) {
     ) => {
       if (toStartOfTimeline) return;
       if (!room) return;
-      if (event.getType() !== "m.room.message") return;
+      const evType = event.getType();
+      if (evType !== "m.room.message" && evType !== "m.room.encrypted") return;
 
       // Read activeRoomId without subscribing — same pattern as useMatrixSync
       const { activeRoomId } = useStore.getState();

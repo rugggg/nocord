@@ -71,7 +71,7 @@ export function useMatrixSync(client: MatrixClient | null) {
         return;
       }
 
-      if (type === "m.room.message") {
+      if (type === "m.room.message" || type === "m.room.encrypted") {
         addMessage(room.roomId, event);
 
         // Read activeRoomId without subscribing

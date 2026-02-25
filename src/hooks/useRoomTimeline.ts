@@ -23,7 +23,9 @@ export function useRoomTimeline(client: MatrixClient | null, roomId: string | nu
       }
 
       const timeline = room.getLiveTimeline().getEvents();
-      const msgEvents = timeline.filter((e) => e.getType() === "m.room.message");
+      const msgEvents = timeline.filter(
+        (e) => e.getType() === "m.room.message" || e.getType() === "m.room.encrypted"
+      );
       if (msgEvents.length > 0) {
         prependMessages(roomId, msgEvents);
       }
