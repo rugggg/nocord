@@ -3,6 +3,7 @@ import { useStore } from "../../store";
 import { Input } from "../ui/Input";
 import { Button } from "../ui/Button";
 import { Avatar } from "../ui/Avatar";
+import { KeyBackupRestore } from "./KeyBackupRestore";
 
 export function SettingsScreen() {
   const matrixClient = useStore((s) => s.matrixClient);
@@ -85,6 +86,9 @@ export function SettingsScreen() {
             </Button>
           </form>
         </div>
+
+        {/* Key Backup */}
+        {matrixClient && <KeyBackupRestore client={matrixClient} />}
 
         {/* Danger Zone */}
         <div className="paper-card p-6 flex flex-col gap-4 border-mario-red/40">
