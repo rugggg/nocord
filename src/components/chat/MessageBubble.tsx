@@ -1,4 +1,5 @@
-import { MatrixEvent, MatrixClient } from "matrix-js-sdk";
+import { useEffect, useReducer } from "react";
+import { MatrixEvent, MatrixClient, MatrixEventEvent } from "matrix-js-sdk";
 import { motion } from "framer-motion";
 import { useStore } from "../../store";
 import { Avatar } from "../ui/Avatar";
@@ -16,10 +17,18 @@ function formatTime(ts: number): string {
 }
 
 function renderBody(event: MatrixEvent, client: MatrixClient | null): JSX.Element {
+  // Still encrypted — either waiting for keys or decryption failed
   if (event.getType() === "m.room.encrypted") {
+    if (event.isDecryptionFailure()) {
+      return (
+        <span className="italic text-pm-gray text-sm">
+          🔒 Unable to decrypt — verify this device to read older messages
+        </span>
+      );
+    }
     return (
       <span className="italic text-pm-gray text-sm">
-        🔒 Encrypted message (E2EE not yet supported)
+        ⏳ Decrypting…
       </span>
     );
   }
@@ -56,6 +65,14 @@ function renderBody(event: MatrixEvent, client: MatrixClient | null): JSX.Elemen
 export function MessageBubble({ event, roomId, onReply }: MessageBubbleProps) {
   const matrixClient = useStore((s) => s.matrixClient);
   const userId = useStore((s) => s.userId);
+
+  // Force re-render when the SDK finishes decrypting this event
+  const [, forceUpdate] = useReducer((n: number) => n + 1, 0);
+  useEffect(() => {
+    const onDecrypted = () => forceUpdate();
+    event.on(MatrixEventEvent.Decrypted, onDecrypted);
+    return () => { event.off(MatrixEventEvent.Decrypted, onDecrypted); };
+  }, [event]);
 
   const senderId = event.getSender() ?? "";
   const room = matrixClient?.getRoom(roomId);

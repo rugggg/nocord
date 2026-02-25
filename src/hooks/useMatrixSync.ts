@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { MatrixClient, ClientEvent, RoomEvent, MatrixEvent } from "matrix-js-sdk";
+import { MatrixClient, RoomEvent, MatrixEvent } from "matrix-js-sdk";
 import { useStore } from "../store";
 import { getSpaces, getChildRooms, getNonSpaceRooms } from "../lib/matrix/spaces";
 import { listenPresence } from "../lib/matrix/presence";
@@ -20,10 +20,11 @@ export function useMatrixSync(client: MatrixClient | null) {
   useEffect(() => {
     if (!client) return;
 
-    const refreshRooms = () => {
-      // Read current space/room selection without subscribing
-      const { activeSpaceId } = useStore.getState();
+    let destroyed = false;
+    let cleanupFns: Array<() => void> = [];
 
+    const refreshRooms = () => {
+      const { activeSpaceId } = useStore.getState();
       const spaces = getSpaces(client);
       setSpaces(spaces);
 
@@ -44,11 +45,7 @@ export function useMatrixSync(client: MatrixClient | null) {
     };
 
     const onSync = (state: string) => {
-      // Only do a full refresh on PREPARED (initial sync done).
-      // Subsequent SYNCINGs are handled by the timeline listener below.
-      if (state === "PREPARED") {
-        refreshRooms();
-      }
+      if (state === "PREPARED") refreshRooms();
     };
 
     const onTimeline = (
@@ -71,10 +68,11 @@ export function useMatrixSync(client: MatrixClient | null) {
         return;
       }
 
+      // Accept both plain messages and encrypted events (decrypted later via
+      // MatrixEventEvent.Decrypted; MessageBubble handles the pending state).
       if (type === "m.room.message" || type === "m.room.encrypted") {
         addMessage(room.roomId, event);
 
-        // Read activeRoomId without subscribing
         const { activeRoomId } = useStore.getState();
         if (room.roomId !== activeRoomId) {
           incrementUnread(room.roomId);
@@ -82,21 +80,39 @@ export function useMatrixSync(client: MatrixClient | null) {
       }
     };
 
-    const removePresenceListener = listenPresence(client, (userId, presence) => {
-      setPresence(userId, presence);
-    });
+    const setup = async () => {
+      // Initialise the Rust-based E2EE crypto backend before starting the client.
+      // Must be called once per client instance, before startClient().
+      try {
+        await (client as MatrixClient & { initRustCrypto: () => Promise<void> }).initRustCrypto();
+      } catch (err) {
+        console.warn("[crypto] initRustCrypto failed, E2EE unavailable:", err);
+      }
 
-    // Use string literals to avoid SDK enum type-casting issues
-    client.on("sync" as Parameters<typeof client.on>[0], onSync as Parameters<typeof client.on>[1]);
-    client.on(RoomEvent.Timeline as Parameters<typeof client.on>[0], onTimeline as Parameters<typeof client.on>[1]);
+      if (destroyed) return; // effect was cleaned up while we were awaiting
 
-    client.startClient({ initialSyncLimit: 30 });
+      client.on("sync" as Parameters<typeof client.on>[0], onSync as Parameters<typeof client.on>[1]);
+      client.on(RoomEvent.Timeline as Parameters<typeof client.on>[0], onTimeline as Parameters<typeof client.on>[1]);
+
+      const removePresenceListener = listenPresence(client, (userId, presence) => {
+        setPresence(userId, presence);
+      });
+
+      client.startClient({ initialSyncLimit: 30 });
+
+      cleanupFns = [
+        () => removePresenceListener(),
+        () => client.removeListener("sync" as Parameters<typeof client.removeListener>[0], onSync as Parameters<typeof client.removeListener>[1]),
+        () => client.removeListener(RoomEvent.Timeline as Parameters<typeof client.removeListener>[0], onTimeline as Parameters<typeof client.removeListener>[1]),
+        () => client.stopClient(),
+      ];
+    };
+
+    setup();
 
     return () => {
-      removePresenceListener();
-      client.removeListener("sync" as Parameters<typeof client.removeListener>[0], onSync as Parameters<typeof client.removeListener>[1]);
-      client.removeListener(RoomEvent.Timeline as Parameters<typeof client.removeListener>[0], onTimeline as Parameters<typeof client.removeListener>[1]);
-      client.stopClient();
+      destroyed = true;
+      cleanupFns.forEach((fn) => fn());
     };
   }, [client]);
 }

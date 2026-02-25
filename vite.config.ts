@@ -1,11 +1,13 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import { nodePolyfills } from "vite-plugin-node-polyfills";
+import topLevelAwait from "vite-plugin-top-level-await";
 
 const host = process.env.TAURI_DEV_HOST;
 
 export default defineConfig({
   plugins: [
+    topLevelAwait(),
     react(),
     nodePolyfills({
       include: ["buffer", "process", "events", "stream", "util", "crypto"],

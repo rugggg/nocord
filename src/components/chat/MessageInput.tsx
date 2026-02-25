@@ -26,7 +26,6 @@ export function MessageInput({ roomId }: MessageInputProps) {
 
   const room = matrixClient?.getRoom(roomId);
   const roomName = room?.name ?? "this room";
-  const isEncrypted = matrixClient?.isRoomEncrypted(roomId) ?? false;
 
   const handleSend = async () => {
     const trimmed = text.trim();
@@ -87,14 +86,6 @@ export function MessageInput({ roomId }: MessageInputProps) {
       }
     }
   };
-
-  if (isEncrypted) {
-    return (
-      <div className="flex items-center gap-2 px-4 py-3 bg-paper border-t-3 border-paper-border text-pm-gray text-sm italic">
-        🔒 This room uses end-to-end encryption — sending not yet supported
-      </div>
-    );
-  }
 
   return (
     <div className="relative">
